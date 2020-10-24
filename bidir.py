@@ -1,4 +1,4 @@
-from Queue import Queue
+from queue import Queue
 import copy
 import sys
 class Pos:
@@ -61,47 +61,48 @@ def getLexiSmallestPath(pathA, pathB):
 #   [8,4,1,3,2,6],
 #   [3,7,2,8,6,4]
 # ]
+def solveMatrix(path):
+    infile = path
+    with open(infile) as file:
+        firstLine = file.readline()
+        Path.maxY, Path.maxX = [int(x) for x in firstLine.split(' ')]
+        matrix = []
+        for line in file.readlines():
+            matrix.append([int(x) for x in line.split(' ')])
 
-# infile = sys.argv[1]
-infile = "matrix_1"
-with open(infile) as file:
-    firstLine = file.readline()
-    Path.maxY, Path.maxX = [int(x) for x in firstLine.split(' ')]
-    matrix = []
-    for line in file.readlines():
-        matrix.append([int(x) for x in line.split(' ')])
+    Path.matrix = matrix
 
-Path.matrix = matrix
+    unTestedPaths = Queue()
+    for row in range(len(matrix)):
+        aPath = Path(Pos(0, row))
+        unTestedPaths.put(aPath)
 
-unTestedPaths = Queue()
-for row in range(len(matrix)):
-    aPath = Path(Pos(0, row))
-    unTestedPaths.put(aPath)
+    directions = ['u', 'd', 'f']
+    completePaths = []
+    while not unTestedPaths.empty():
+        currentPath = unTestedPaths.get_nowait()
+        if(currentPath.isComplete()):
+            completePaths.append(currentPath)
+        else:
+            currentPath.recordScore()
+            for dire in directions:
+                nextPath = currentPath.spawnNextPath(dire)
+                unTestedPaths.put(nextPath)
 
-directions = ['u', 'd', 'f']
-completePaths = []
-while not unTestedPaths.empty():
-    currentPath = unTestedPaths.get_nowait()
-    if(currentPath.isComplete()):
-        completePaths.append(currentPath)
-    else:
-        currentPath.recordScore()
-        for dire in directions:
-            nextPath = currentPath.spawnNextPath(dire)
-            unTestedPaths.put(nextPath)
-
-minScore = 99999
-bestPath = None
-for path in completePaths:
-    score = sum(path.scores)
-    if score < minScore:
-        minScore = score
-        bestPath = path
-    elif score == minScore:
-        bestPath = getLexiSmallestPath(bestPath, path)
-
-print(str(bestPath.rows).replace('[', '').replace(']', '').replace(',', ' '))
-print(sum(bestPath.scores))
+    minScore = 99999
+    bestPath = None
+    for path in completePaths:
+        score = sum(path.scores)
+        if score < minScore:
+            minScore = score
+            bestPath = path
+        elif score == minScore:
+            bestPath = getLexiSmallestPath(bestPath, path)
+    outstr = str(bestPath.rows).replace('[', '').replace(']', '').replace(',', ' ') + "\n"
+    outstr += str(sum(bestPath.scores))
+    return outstr
+    # print()
+    # print(sum(bestPath.scores))
 # print("A best path:")
 # print("Sum: " + str(sum(bestPath.scores)))
 # print("scores " + str(bestPath.scores))
