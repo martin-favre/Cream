@@ -23,7 +23,7 @@ def get_mem_usage(filename):
             heap_tree = contents[index+6] #not used
             memory_points.append(MemPoint(time, mem_heap, mem_heap_extra, mem_stacks, heap_tree))
     maxUsage = max(value.get_sum_memusage() for value in memory_points)
-    print(maxUsage)
-
+    return maxUsage
+    
 if __name__ == "__main__":
     get_mem_usage(sys.argv[1])
