@@ -145,11 +145,13 @@ Matrix getMatrixFromFile(const char *filename)
 
     while ((read = getline(&line, &len, file)) != -1)
     {
-
-        matrix.rows[currentRow].values = malloc(sizeof(int) * matrix.size.x);
-        int unusedBecauseIAmABadBoiWhoDoesNoChecks = 0;
-        getNumbersFromLine(line, read, matrix.rows[currentRow].values, &unusedBecauseIAmABadBoiWhoDoesNoChecks);
-        currentRow++;
+        if (line[0] != '\n') // skip random newlines
+        {
+            matrix.rows[currentRow].values = malloc(sizeof(int) * matrix.size.x);
+            int unusedBecauseIAmABadBoiWhoDoesNoChecks = 0;
+            getNumbersFromLine(line, read, matrix.rows[currentRow].values, &unusedBecauseIAmABadBoiWhoDoesNoChecks);
+            currentRow++;
+        }
     }
     free(line);
     fclose(file);
@@ -182,7 +184,8 @@ void printMatrix(const Matrix *matrix)
 // ./a.out path/to/mymatrixfile
 int main(int argc, char *argv[])
 {
-    char *matrixFilename = argv[1];
+    // char *matrixFilename = argv[1];
+    char *matrixFilename = "testmatrix";
     Matrix matrix = getMatrixFromFile(matrixFilename);
 
     printMatrix(&matrix);
