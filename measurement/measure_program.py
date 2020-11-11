@@ -3,10 +3,35 @@ import sys
 import subprocess
 from subprocess import CalledProcessError
 from subprocess import TimeoutExpired
-import getMemUsage
 import time
 import re
 import statistics
+
+class MemPoint:
+    def __init__(self, time, heap, heap_extra, stack, heap_tree):
+        self.time = int(time.split("=")[1])
+        self.heap = int(heap.split("=")[1])
+        self.heap_extra = int(heap_extra.split("=")[1])
+        self.stack = int(stack.split("=")[1])
+
+    def get_sum_memusage(self):
+        return self.heap + self.heap_extra + self.stack
+
+def get_mem_usage(filename):
+    with open(filename) as file:
+        contents = file.readlines()
+    memory_points = []
+    for index in range(len(contents)):
+        if("snapshot" in contents[index]):
+            emptyLine = contents[index+1] # not used
+            time = contents[index+2] # not used
+            mem_heap = contents[index+3]
+            mem_heap_extra = contents[index+4]
+            mem_stacks = contents[index+5]
+            heap_tree = contents[index+6] #not used
+            memory_points.append(MemPoint(time, mem_heap, mem_heap_extra, mem_stacks, heap_tree))
+    maxUsage = max(value.get_sum_memusage() for value in memory_points)
+    return maxUsage
 
 def getFileSize(filename):
     return os.path.getsize(filename)
@@ -26,7 +51,7 @@ def getRam(matrix, filename):
     resultFilename = subprocess.check_output(
         ('grep', 'massif.out'), stdin=ps.stdout).decode(sys.stdout.encoding).strip()
     ps.wait()
-    maxUsage = getMemUsage.get_mem_usage(resultFilename)
+    maxUsage = get_mem_usage(resultFilename)
     return maxUsage
 
 def getSpeed(matrix, filename):
@@ -69,11 +94,17 @@ def isValid(matrix, filename, solutionFilename):
     return True
 
 
+def tryInt(s):
+    try:
+        return int(s)
+    except:
+        return s
+
 def alphanum_key(s):
     """ Turn a string into a list of string and number chunks.
         "z23a" -> ["z", 23, "a"]
     """
-    return [int(c) for c in re.split('([0-9]+)', s) ]
+    return [tryInt(c) for c in re.split('([0-9]+)', s) ]
 
 def sort_nicely(l):
     """ Sort the given list in the way that humans expect.
