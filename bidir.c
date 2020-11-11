@@ -133,9 +133,9 @@ Path getNextFromList(const Path *list)
     return out;
 }
 
-int isComplete(Path path, int maxX)
+int isComplete(const Path *path, int maxX)
 {
-    return path.position.x >= maxX;
+    return path->position.x >= maxX;
 }
 
 Path getNewPath(const Matrix *matrix)
@@ -191,6 +191,20 @@ int getScore(const Path *path)
     return sum;
 }
 
+const Path *getBestPath(const Path *pathA, const Path *pathB)
+{
+    const int scoreA = getScore(pathA);
+    const int scoreB = getScore(pathB);
+    if (scoreA < scoreB)
+    {
+        return pathA;
+    }
+    else if (scoreA == scoreB)
+    {
+        return getLexiSmallestPath(pathA, pathB);
+    }
+    return pathB;
+}
 void findPath(const Matrix *matrix, Path *bestPath)
 {
     Path *untestedPaths = malloc(sizeof(Path) * 1000000);
@@ -206,30 +220,19 @@ void findPath(const Matrix *matrix, Path *bestPath)
     while (untestedPathSize > 0)
     {
         Path currentPath = getNextFromList(untestedPaths);
-        // printf("got a path\n");
 
-        if (isComplete(currentPath, matrix->size.x))
+        if (isComplete(&currentPath, matrix->size.x))
         {
             if (bestPathSet)
             {
-                int currentScore = getScore(&currentPath);
-                int bestScore = getScore(bestPath);
-                if (currentScore < bestScore)
+                const Path *betterPath = getBestPath(bestPath, &currentPath);
+                if (betterPath == &currentPath)
                 {
                     freePath(bestPath);
                     *bestPath = currentPath;
                 }
-                else if (currentScore == bestScore)
+                else
                 {
-                    const Path *winner = getLexiSmallestPath(&currentPath, bestPath);
-                    if (winner == &currentPath)
-                    {
-                        freePath(bestPath);
-                        *bestPath = currentPath;
-                    } else {
-                        freePath(&currentPath);
-                    }
-                } else {
                     freePath(&currentPath);
                 }
             }
@@ -248,7 +251,22 @@ void findPath(const Matrix *matrix, Path *bestPath)
             {
                 char dir = directions[i];
                 Path nextPath = getNextPath(&currentPath, matrix, dir);
-                putInList(&untestedPaths, nextPath);
+                if (bestPathSet)
+                {
+                    const Path *betterPath = getBestPath(bestPath, &nextPath);
+                    if (betterPath == &nextPath)
+                    {
+                        putInList(&untestedPaths, nextPath);
+                    }
+                    else
+                    {
+                        freePath(&nextPath);
+                    }
+                }
+                else
+                {
+                    putInList(&untestedPaths, nextPath);
+                }
             }
             freePath(&currentPath);
         }
@@ -299,7 +317,7 @@ int main(int argc, char *argv[])
 {
     char *matrixFilename = argv[1];
     // matrixFilename = "matrices/bigmatrix2";
-    matrixFilename = "matrices/matrix_1";
+    // matrixFilename = "matrices/matrix_1";
     Matrix matrix = getMatrixFromFile(matrixFilename);
     // printMatrix(matrix);
     Path bestPath = getNewPath(&matrix);
