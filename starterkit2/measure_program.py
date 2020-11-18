@@ -42,6 +42,12 @@ def purge(dir):
         if "massif.out." in f:
             os.remove(os.path.join(dir, f))
 
+def valgrindExists():
+    try:
+        subprocess.run(["valgrind", "--version"])
+        return True
+    except:
+        return False
 
 def getRam(matrix, filename):
     purge(".")
@@ -80,18 +86,20 @@ def isValid(matrix, filename, solutionFilename):
     except TimeoutExpired as e:
         print("The application exceeded the allowed time on: " + matrix)
         return False
-    result = getSolutionFromString(resultLines)
+    try:
+        result = getSolutionFromString(resultLines)
+    except:
+        print("Solution was printed in incorrect format \n" + str(resultLines))
     with open(solutionFilename) as solutionFile:
         solutionLines = solutionFile.read()
     solution = getSolutionFromString(solutionLines)
-    return solution == result
-    for i in range(len(resultLines)):
-        if resultLines[i] != solutionLines[i]:
-            print('Incorrect solution.')
-            print('Expected: ' + str(resultLines))
-            print('Received: ' + str(solutionLines))
-            return False
-    return True
+    if(solution == result):
+        return True
+    else: 
+        print('Incorrect solution.')
+        print('Expected: ' + str(resultLines))
+        print('Received: ' + str(solutionLines))
+        return False
 
 
 def tryInt(s):
@@ -144,17 +152,23 @@ if __name__ == "__main__":
     speeds = []
     rams = []
     fileSize = getFileSize(filename)
-
+    hasValgrind = valgrindExists()
+    if not hasValgrind:
+        print("Valgrind not found, can't measure ram")
+        print("If on Windows, get a better OS")
+        print("If on Linux: sudo apt install valgrind")
     for index in range(len(matrices)):
         matrix = matrices[index]
+        print("Evaluating: " + str(matrix))
         solution = solutions[index]
         valid = isValid(matrix, filename, solution)
         if not valid:
             break
         speed = getSpeed(matrix, filename)
-        ram = getRam(matrix, filename)
+        if hasValgrind:
+            ram = getRam(matrix, filename)
+            rams.append(ram)            
         speeds.append(speed)
-        rams.append(ram)
 
     print("Filesize is " + str(fileSize) + " bytes")
     print("")
@@ -162,6 +176,7 @@ if __name__ == "__main__":
     print("")
     print("Average Speed is: " + str(statistics.mean(speeds)) + " seconds")
     print("")
-    print("Rams (b) are " + str(rams))
-    print("")
-    print("Average Ram usage is: " + str(round(statistics.mean(rams))) + " bytes" )
+    if hasValgrind:
+        print("Rams (b) are " + str(rams))
+        print("")
+        print("Average Ram usage is: " + str(round(statistics.mean(rams))) + " bytes" )

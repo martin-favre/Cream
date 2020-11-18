@@ -104,7 +104,7 @@ size_t getline(char **lineptr, size_t *n, FILE *stream)
 void getNumbersFromLine(const char *line, const ssize_t lineSize, int outBuff[], int *outBuffSize)
 {
     //worst case scenario, whole line is a number. +1 for null termination
-    char *currNumberBuff = malloc(sizeof(char) * lineSize + 1);
+    char *currNumberBuff = (char *)malloc(sizeof(char) * lineSize + 1);
     int currNumberSize = 0;
     for (int i = 0; i < lineSize; i++)
     {
@@ -143,7 +143,7 @@ Matrix getMatrixFromFile(const char *filename)
         size_t len = 0;
         ssize_t read;
         read = getline(&line, &len, file);
-        int *numbers = malloc(sizeof(int) * matrix.size.x);
+        int *numbers = (int *)malloc(sizeof(int) * 2);
         int numberOfNumbers = 0;
         getNumbersFromLine(line, read, numbers, &numberOfNumbers);
         free(line);
@@ -152,7 +152,7 @@ Matrix getMatrixFromFile(const char *filename)
         matrix.size.x = numbers[1];
         free(numbers);
     }
-    matrix.rows = malloc(sizeof(Row) * matrix.size.y);
+    matrix.rows = (Row*)malloc(sizeof(Row) * matrix.size.y);
     int currentRow = 0;
     char *line = NULL;
     size_t len = 0;
@@ -162,7 +162,7 @@ Matrix getMatrixFromFile(const char *filename)
     {
         if (line[0] != '\n') // skip random newlines
         {
-            matrix.rows[currentRow].values = malloc(sizeof(int) * matrix.size.x);
+            matrix.rows[currentRow].values = (int *)malloc(sizeof(int) * matrix.size.x);
             int unusedBecauseIAmABadBoiWhoDoesNoChecks = 0;
             getNumbersFromLine(line, read, matrix.rows[currentRow].values, &unusedBecauseIAmABadBoiWhoDoesNoChecks);
             currentRow++;
@@ -203,8 +203,8 @@ int isComplete(Path path, int maxX)
 Path getNewPath(const Matrix *matrix)
 {
     Path path = {0};
-    path.rows = malloc(sizeof(int) * matrix->size.x);
-    path.scores = malloc(sizeof(int) * matrix->size.x);
+    path.rows = (int*)malloc(sizeof(int) * matrix->size.x);
+    path.scores = (int*)malloc(sizeof(int) * matrix->size.x);
     return path;
 }
 
@@ -246,7 +246,7 @@ Path getNextPath(const Path *currentPath, const Matrix *matrix, char dir)
 // Depth first search
 void findPath(const Matrix *matrix, Path **completePaths)
 {
-    Path *untestedPaths = malloc(sizeof(Path) * 1000000);
+    Path *untestedPaths = (Path*)malloc(sizeof(Path) * 1000000);
 
     // Go through each column and start a search from each one
     for (int i = 0; i < matrix->size.y; i++)
@@ -317,7 +317,7 @@ int main(int argc, char *argv[])
     Matrix matrix = getMatrixFromFile(matrixFilename);
 
     // This will contain all resulting paths
-    Path *completedPaths = malloc(sizeof(Path) * 1000000);
+    Path *completedPaths = (Path*)malloc(sizeof(Path) * 1000000);
     findPath(&matrix, &completedPaths);
 
     // We have now found all possible paths
@@ -345,4 +345,5 @@ int main(int argc, char *argv[])
     }
     printf("\n");
     printf("%d\n", getPathScore(bestPath));
+    return 0;
 }
