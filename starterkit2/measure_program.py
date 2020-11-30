@@ -97,8 +97,8 @@ def isValid(matrix, filename, solutionFilename):
         return True
     else: 
         print('Incorrect solution.')
-        print('Expected: ' + str(resultLines))
-        print('Received: ' + str(solutionLines))
+        print('Expected: ' + str(solutionLines))
+        print('Received: ' + str(resultLines))
         return False
 
 
